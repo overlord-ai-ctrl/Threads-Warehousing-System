@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ShopifyOrder, ShopifyLineItem } from '../lib/shopify';
 import { useElectron } from '../hooks/useElectron';
 import { getOrderAdminUrl, getShippingSettingsUrl } from '../lib/shopifyLinks';
+import { useJobQueue } from '../hooks/useJobQueue';
 
 interface BenchViewProps {
   order: ShopifyOrder | null;
@@ -53,6 +54,7 @@ export const BenchView: React.FC<BenchViewProps> = ({
   shopifyLabelsSupported = false,
 }) => {
   const { isElectron, invoke } = useElectron();
+  const { addJob } = useJobQueue();
   const [pickedItems, setPickedItems] = useState<PickedItem[]>([]);
   const [currentScan, setCurrentScan] = useState<string>('');
   const [scanMode, setScanMode] = useState<'item' | 'bin'>('item');
@@ -211,61 +213,53 @@ export const BenchView: React.FC<BenchViewProps> = ({
         setPickedItems(completedItems);
 
         // Add jobs to queue for offline processing
-        if (isElectron) {
-          // Create label job
-          await invoke('queue:add-job', {
-            type: 'create_label',
-            payload_json: {
-              orderId: order.id,
-              fromAddress: {
-                name: 'Threads Alliance',
-                company: 'Threads Alliance',
-                street1: '123 Warehouse St',
-                city: 'Los Angeles',
-                state: 'CA',
-                zip: '90210',
-                country: 'US',
-              },
-              toAddress: order.shippingAddress,
-              packages: [{
-                length: 12,
-                width: 8,
-                height: 4,
-                weight: 1.5,
-                distanceUnit: 'in',
-                massUnit: 'lb',
-              }],
-              carrierAccount: 'default',
-              serviceLevelToken: 'ground',
-              labelFileType: 'zpl',
-              metadata: { orderName: order.name },
+        const labelJobId = await addJob(
+          'create_label',
+          {
+            orderId: order.id,
+            fromAddress: {
+              name: 'Threads Alliance',
+              company: 'Threads Alliance',
+              street1: '123 Warehouse St',
+              city: 'Los Angeles',
+              state: 'CA',
+              zip: '90210',
+              country: 'US',
             },
-            idempotency_key: `label_${order.id}_${Date.now()}`,
-            status: 'queued',
-            attempts: 0,
-            next_run_at: new Date().toISOString(),
-            correlation_id: order.id,
-          });
+            toAddress: order.shippingAddress,
+            packages: [{
+              length: 12,
+              width: 8,
+              height: 4,
+              weight: 1.5,
+              distanceUnit: 'in',
+              massUnit: 'lb',
+            }],
+            carrierAccount: 'default',
+            serviceLevelToken: 'ground',
+            labelFileType: 'zpl',
+            metadata: { orderName: order.name },
+          },
+          `label_${order.id}_${Date.now()}`,
+          order.id
+        );
 
-          // Create fulfillment job
-          await invoke('queue:add-job', {
-            type: 'create_fulfillment',
-            payload_json: {
-              orderId: order.id,
-              lineItems: completedItems.map(item => ({
-                id: item.lineItemId,
-                quantity: item.pickedQuantity,
-              })),
-              trackingInfo: [],
-              notifyCustomer: true,
-            },
-            idempotency_key: `fulfillment_${order.id}_${Date.now()}`,
-            status: 'queued',
-            attempts: 0,
-            next_run_at: new Date().toISOString(),
-            correlation_id: order.id,
-          });
-        }
+        const fulfillmentJobId = await addJob(
+          'create_fulfillment',
+          {
+            orderId: order.id,
+            lineItems: completedItems.map(item => ({
+              id: item.lineItemId,
+              quantity: item.pickedQuantity,
+            })),
+            trackingInfo: [],
+            notifyCustomer: true,
+          },
+          `fulfillment_${order.id}_${Date.now()}`,
+          order.id
+        );
+
+        console.log(`Queued label job: ${labelJobId}, fulfillment job: ${fulfillmentJobId}`);
         
         onComplete(order, pickedItems);
       } catch (error) {

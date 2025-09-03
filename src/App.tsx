@@ -16,6 +16,7 @@ import { HardwareTest } from './components/HardwareTest';
 import { LoadingScreen } from './components/LoadingScreen';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastContainer } from './components/ToastContainer';
+import { JobQueueView } from './components/JobQueueView';
 import './App.css';
 
 export const App: React.FC = () => {
@@ -78,6 +79,7 @@ export const App: React.FC = () => {
             <Route path="/exceptions" element={<ExceptionsView />} />
             <Route path="/settings" element={<SettingsView />} />
             <Route path="/hardware-test" element={<HardwareTest />} />
+            <Route path="/job-queue" element={<JobQueueView />} />
             <Route path="*" element={<Navigate to="/master" replace />} />
           </Routes>
         </Layout>

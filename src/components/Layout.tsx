@@ -36,6 +36,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     { name: 'Returns', href: '/returns', icon: '↩️' },
     { name: 'Cycle Count', href: '/cycle-count', icon: '🔢' },
     { name: 'Exceptions', href: '/exceptions', icon: '⚠️' },
+    { name: 'Job Queue', href: '/job-queue', icon: '📋' },
     { name: 'Settings', href: '/settings', icon: '⚙️' },
     { name: 'Hardware Test', href: '/hardware-test', icon: '🔧' },
   ];
