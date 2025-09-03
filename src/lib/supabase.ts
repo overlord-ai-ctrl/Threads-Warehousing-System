@@ -1,6 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 import { Database } from './database.types';
 
+// Type assertion for Vite environment variables
+declare global {
+  interface ImportMeta {
+    readonly env: {
+      readonly VITE_SUPABASE_URL: string;
+      readonly VITE_SUPABASE_ANON_KEY: string;
+      readonly VITE_APP_URL: string;
+      readonly MODE: string;
+    };
+  }
+}
+
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -72,7 +84,7 @@ export const createBrand = async (brandData: {
 }) => {
   const { data, error } = await supabase
     .from('brands')
-    .insert(brandData)
+    .insert(brandData as any)
     .select()
     .single();
   return { data, error };
@@ -89,7 +101,7 @@ export const connectShopifyStore = async (storeData: {
 }) => {
   const { data, error } = await supabase
     .from('brand_shops')
-    .insert(storeData)
+    .insert(storeData as any)
     .select()
     .single();
   return { data, error };

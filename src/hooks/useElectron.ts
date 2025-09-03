@@ -1,7 +1,15 @@
 import { useCallback } from 'react';
 
+// Type assertion for Electron API
+declare global {
+  interface Window {
+    electronAPI: any;
+  }
+}
+
 export const useElectron = () => {
   const isElectron = typeof window !== 'undefined' && 'electronAPI' in window;
+  const isReady = isElectron;
 
   const invoke = useCallback(async (channel: string, ...args: any[]): Promise<any> => {
     if (!isElectron) {
@@ -158,6 +166,7 @@ export const useElectron = () => {
 
   return {
     isElectron,
+    isReady,
     invoke,
     on,
     removeAllListeners,

@@ -105,7 +105,7 @@ export const BenchView: React.FC<BenchViewProps> = ({
       setPrinterStatuses(statuses);
       
       // Check if any printers are offline
-      const hasOfflinePrinters = statuses.some(p => !p.isOnline);
+      const hasOfflinePrinters = statuses.some((p: any) => !p.isOnline);
       setShowPrinterBanner(hasOfflinePrinters);
     } catch (error) {
       console.error('Failed to load printer status:', error);
@@ -267,11 +267,11 @@ export const BenchView: React.FC<BenchViewProps> = ({
           });
         }
         
-        onComplete(order, completedItems);
+        onComplete(order, pickedItems);
       } catch (error) {
         console.error('Failed to queue completion jobs:', error);
         // Still call onComplete even if queueing fails
-        onComplete(order, completedItems);
+        onComplete(order, pickedItems);
       }
     }
   };
@@ -346,7 +346,7 @@ export const BenchView: React.FC<BenchViewProps> = ({
   const copyAddress = () => {
     if (order?.shippingAddress) {
       const address = order.shippingAddress;
-      const addressText = `${address.name}\n${address.address1}\n${address.address2 ? address.address2 + '\n' : ''}${address.city}, ${address.province} ${address.zip}\n${address.country}`;
+      const addressText = `${address.firstName} ${address.lastName}\n${address.address1}\n${address.address2 ? address.address2 + '\n' : ''}${address.city}, ${address.province} ${address.zip}\n${address.country}`;
       copyToClipboard(addressText, 'Address copied');
     }
   };
@@ -408,7 +408,7 @@ export const BenchView: React.FC<BenchViewProps> = ({
             <p className="text-blue-100">
               {order.lineItems.length} items • 
               {order.shippingAddress && (
-                <span> {order.shippingAddress.city}, {order.shippingAddress.state}</span>
+                <span> {order.shippingAddress.city}, {order.shippingAddress.province}</span>
               )}
             </p>
             
@@ -519,7 +519,7 @@ export const BenchView: React.FC<BenchViewProps> = ({
             <div>
               <h3 className="text-sm font-medium text-gray-700 mb-2">Shipping Address</h3>
               <div className="text-sm text-gray-600">
-                <p>{order.shippingAddress.name}</p>
+                <p>{order.shippingAddress.firstName} {order.shippingAddress.lastName}</p>
                 <p>{order.shippingAddress.address1}</p>
                 {order.shippingAddress.address2 && <p>{order.shippingAddress.address2}</p>}
                 <p>{order.shippingAddress.city}, {order.shippingAddress.province} {order.shippingAddress.zip}</p>

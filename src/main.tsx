@@ -5,6 +5,13 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import { App } from './App';
 import './index.css';
 
+// Type assertion for Electron API
+declare global {
+  interface Window {
+    electronAPI: any;
+  }
+}
+
 // Create React Query client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,7 +25,7 @@ const queryClient = new QueryClient({
 });
 
 // Check if running in Electron
-const isElectron = window.electronAPI !== undefined;
+const isElectron = typeof window !== 'undefined' && window.electronAPI !== undefined;
 
 // Initialize Electron-specific features
 if (isElectron) {
@@ -27,7 +34,7 @@ if (isElectron) {
   // Set up global error handler for Electron
   window.addEventListener('error', (event) => {
     console.error('Global error:', event.error);
-    if (window.electronAPI) {
+    if (typeof window !== 'undefined' && window.electronAPI) {
       // Report crash to Electron
       window.electronAPI.app.reportCrash?.();
     }

@@ -4,10 +4,10 @@
  */
 
 export interface ShopifyDeepLinks {
-  adminOrderUrl: string;
-  adminOrderSearchByNameUrl: string;
-  adminFulfillmentsSearchUrl: string;
-  adminShippingSettingsUrl: string;
+  adminOrderUrl: (orderId: string) => string;
+  adminOrderSearchByNameUrl: (orderName: string) => string;
+  adminFulfillmentsSearchUrl: (orderName: string) => string;
+  adminShippingSettingsUrl: () => string;
 }
 
 /**

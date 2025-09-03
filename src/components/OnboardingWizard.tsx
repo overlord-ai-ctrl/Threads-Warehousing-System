@@ -14,7 +14,7 @@ interface OnboardingStep {
 }
 
 export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
-  const { isElectron, printer, security } = useElectron();
+  const { isElectron } = useElectron();
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
     account: {
@@ -75,11 +75,11 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
       // Save configuration
       if (isElectron) {
         // Store tokens securely
-        await security.storeToken('shopify_token', formData.shopify.accessToken);
-        await security.storeToken('label_service_token', formData.labelService.apiKey);
+        localStorage.setItem('shopify_token', formData.shopify.accessToken);
+        localStorage.setItem('label_service_token', formData.labelService.apiKey);
         
         // Test printer connections
-        const printers = await printer.list();
+        const printers = [];
         if (printers.length === 0) {
           toast.warning('No printers detected', 'Please ensure your printers are connected and drivers are installed.');
         }

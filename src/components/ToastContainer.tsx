@@ -49,7 +49,7 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({
     }
 
     // Auto-remove after duration
-    if (newToast.duration > 0) {
+    if (newToast.duration && newToast.duration > 0) {
       setTimeout(() => {
         removeToast(newToast.id);
       }, newToast.duration);

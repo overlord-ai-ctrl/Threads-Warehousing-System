@@ -22,6 +22,6 @@
       "@shared/*": ["shared/*"]
     }
   },
-  "include": ["src", "shared"],
+  "include": ["src", "shared", "src/types", "src/types/vite-env.d.ts"],
   "exclude": ["node_modules", "dist", "electron", "cloud"]
 }

@@ -231,7 +231,7 @@ export class ShopifyClient {
     };
 
     try {
-      const data = await this.client.request(query, variables);
+      const data = await this.client.request(query, variables) as any;
       return {
         orders: data.orders.edges.map((edge: any) => edge.node),
         pageInfo: data.orders.pageInfo,
@@ -286,7 +286,7 @@ export class ShopifyClient {
     };
 
     try {
-      const data = await this.client.request(mutation, variables);
+      const data = await this.client.request(mutation, variables) as any;
       if (data.fulfillmentCreate.userErrors.length > 0) {
         throw new Error(data.fulfillmentCreate.userErrors[0].message);
       }
@@ -328,7 +328,7 @@ export class ShopifyClient {
     };
 
     try {
-      const data = await this.client.request(mutation, variables);
+      const data = await this.client.request(mutation, variables) as any;
       if (data.inventoryAdjustQuantities.userErrors.length > 0) {
         throw new Error(data.inventoryAdjustQuantities.userErrors[0].message);
       }
@@ -363,12 +363,22 @@ export class ShopifyClient {
     `;
 
     try {
-      const data = await this.client.request(query);
+      const data = await this.client.request(query) as any;
       return data.locations.edges.map((edge: any) => edge.node);
     } catch (error) {
       console.error('Failed to fetch locations:', error);
       throw error;
     }
+  }
+
+  // Public method for label adapters to use
+  async request(query: string, variables?: any): Promise<any> {
+    return this.client.request(query, variables);
+  }
+
+  // Get shop domain for external use
+  getShopDomain(): string {
+    return this.config.shopDomain;
   }
 
   // Search products by barcode
@@ -408,7 +418,7 @@ export class ShopifyClient {
     `;
 
     try {
-      const data = await this.client.request(query, { query: `barcode:${barcode}` });
+      const data = await this.client.request(query, { query: `barcode:${barcode}` }) as any;
       return data.productVariants.edges.map((edge: any) => edge.node);
     } catch (error) {
       console.error('Failed to search products:', error);

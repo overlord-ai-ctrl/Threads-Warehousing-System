@@ -20,7 +20,7 @@ export interface AuthState {
 }
 
 export const useAuth = () => {
-  const { isElectron, security } = useElectron();
+  const { isElectron } = useElectron();
   const [authState, setAuthState] = useState<AuthState>({
     isAuthenticated: false,
     isLoading: true,
@@ -39,7 +39,7 @@ export const useAuth = () => {
 
       if (isElectron) {
         // Check for stored authentication in Electron
-        const token = await security.getToken('supabase_token');
+        const token = localStorage.getItem('supabase_token');
         if (token) {
           // Validate token and get user info
           const user = await validateToken(token);
@@ -85,7 +85,7 @@ export const useAuth = () => {
         error: error instanceof Error ? error.message : 'Authentication check failed',
       });
     }
-  }, [isElectron, security]);
+  }, [isElectron]);
 
   const validateToken = async (token: string): Promise<User | null> => {
     try {
@@ -155,11 +155,7 @@ export const useAuth = () => {
       };
 
       // Store token
-      if (isElectron) {
-        await security.storeToken('supabase_token', mockToken);
-      } else {
-        localStorage.setItem('supabase_token', mockToken);
-      }
+      localStorage.setItem('supabase_token', mockToken);
 
       setAuthState({
         isAuthenticated: true,
@@ -174,7 +170,7 @@ export const useAuth = () => {
       setAuthState(prev => ({ ...prev, isLoading: false, error: errorMessage }));
       return false;
     }
-  }, [isElectron, security]);
+  }, [isElectron]);
 
   const signUp = useCallback(async (email: string, password: string, name: string): Promise<boolean> => {
     try {
@@ -198,11 +194,7 @@ export const useAuth = () => {
       };
 
       // Store token
-      if (isElectron) {
-        await security.storeToken('supabase_token', mockToken);
-      } else {
-        localStorage.setItem('supabase_token', mockToken);
-      }
+      localStorage.setItem('supabase_token', mockToken);
 
       setAuthState({
         isAuthenticated: true,
@@ -217,16 +209,12 @@ export const useAuth = () => {
       setAuthState(prev => ({ ...prev, isLoading: false, error: errorMessage }));
       return false;
     }
-  }, [isElectron, security]);
+  }, [isElectron]);
 
   const signOut = useCallback(async (): Promise<void> => {
     try {
       // Clear stored tokens
-      if (isElectron) {
-        await security.storeToken('supabase_token', '');
-      } else {
-        localStorage.removeItem('supabase_token');
-      }
+      localStorage.removeItem('supabase_token');
 
       setAuthState({
         isAuthenticated: false,
@@ -237,7 +225,7 @@ export const useAuth = () => {
     } catch (error) {
       console.error('Sign out failed:', error);
     }
-  }, [isElectron, security]);
+  }, [isElectron]);
 
   const updateUser = useCallback((updates: Partial<User>): void => {
     setAuthState(prev => ({

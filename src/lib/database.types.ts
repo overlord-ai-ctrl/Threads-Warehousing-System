@@ -61,6 +61,8 @@ export interface Database {
           id: string;
           brand_id: string;
           shop_domain: string;
+          access_token: string;
+          webhook_secret: string;
           default_location_id: string;
           printer_map: Record<string, string>;
           service_rules_json: Record<string, any>;
@@ -71,6 +73,8 @@ export interface Database {
           id?: string;
           brand_id: string;
           shop_domain: string;
+          access_token: string;
+          webhook_secret: string;
           default_location_id: string;
           printer_map?: Record<string, string>;
           service_rules_json?: Record<string, any>;
@@ -81,6 +85,8 @@ export interface Database {
           id?: string;
           brand_id?: string;
           shop_domain?: string;
+          access_token?: string;
+          webhook_secret?: string;
           default_location_id?: string;
           printer_map?: Record<string, string>;
           service_rules_json?: Record<string, any>;

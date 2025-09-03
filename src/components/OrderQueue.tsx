@@ -252,7 +252,7 @@ export const OrderQueue: React.FC<OrderQueueProps> = ({
                   <p className="text-xs text-gray-500">
                     Created {getAgeText(order.age)} • 
                     {order.shippingAddress && (
-                      <span> {order.shippingAddress.city}, {order.shippingAddress.state}</span>
+                      <span> {order.shippingAddress.city}, {order.shippingAddress.province}</span>
                     )}
                   </p>
                 </div>

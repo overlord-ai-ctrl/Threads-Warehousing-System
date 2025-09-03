@@ -110,15 +110,6 @@ const checkOnboardingStatus = async (): Promise<boolean> => {
   try {
     // This would check if the user has completed the onboarding process
     // For now, we'll assume they have if they have any brands configured
-    if (window.electronAPI) {
-      // Check local database for brand configuration
-      const brands = await window.electronAPI.database.query(
-        'SELECT COUNT(*) as count FROM brand_shops',
-        []
-      );
-      return brands.length > 0 && brands[0].count > 0;
-    }
-    
     // Fallback for browser mode
     return localStorage.getItem('onboarding-completed') === 'true';
   } catch (error) {

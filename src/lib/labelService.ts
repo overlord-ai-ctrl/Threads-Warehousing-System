@@ -75,6 +75,7 @@ export class ShippoLabelService extends LabelService {
   private baseUrl: string;
 
   constructor(apiKey: string, isTestMode: boolean = false) {
+    super();
     this.apiKey = apiKey;
     this.baseUrl = isTestMode 
       ? 'https://api.goshippo.com/shipments/'

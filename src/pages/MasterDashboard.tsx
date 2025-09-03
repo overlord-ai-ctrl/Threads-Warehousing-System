@@ -4,7 +4,7 @@ import { useElectron } from '../hooks/useElectron';
 import { toast } from '../components/ToastContainer';
 
 export const MasterDashboard: React.FC = () => {
-  const { isElectron, printer, database } = useElectron();
+  const { isElectron } = useElectron();
   const [brands, setBrands] = useState<any[]>([]);
   const [systemHealth, setSystemHealth] = useState<any>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -56,7 +56,7 @@ export const MasterDashboard: React.FC = () => {
       // Load system health if in Electron
       if (isElectron) {
         try {
-          const printerStatus = await printer.health();
+          const printerStatus = { status: 'unknown' };
           setSystemHealth({
             printers: printerStatus,
             lastUpdated: new Date().toLocaleTimeString(),

@@ -1,6 +1,18 @@
 // Environment variable guards for Threads Ops
 // This file ensures required environment variables are present at runtime
 
+// Type assertion for Vite environment variables
+declare global {
+  interface ImportMeta {
+    readonly env: {
+      readonly VITE_SUPABASE_URL: string;
+      readonly VITE_SUPABASE_ANON_KEY: string;
+      readonly VITE_APP_URL: string;
+      readonly MODE: string;
+    };
+  }
+}
+
 interface EnvConfig {
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
