@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Threads Ops - Desktop Warehouse Management Application" />
+    <meta name="author" content="Threads Alliance" />
+    <title>Threads Ops</title>
+    
+    <!-- Prevent zoom on mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    
+    <!-- Security headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline; img-src 'self' data: https:; connect-src 'self' https:;">
+    
+    <!-- Kiosk mode support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- Prevent text selection for kiosk mode -->
+    <style>
+      * {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+      
+      /* Allow text selection in input fields */
+      input, textarea, [contenteditable] {
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+        user-select: text;
+      }
+      
+      /* Fullscreen kiosk mode */
+      body.kiosk-mode {
+        overflow: hidden;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+      }
+      
+      /* Loading spinner */
+      .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <!-- Loading screen -->
+      <div style="
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      ">
+        <div style="margin-bottom: 20px;">
+          <svg width="80" height="80" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="40" stroke="white" stroke-width="4" fill="none" opacity="0.3"/>
+            <circle cx="50" cy="50" r="40" stroke="white" stroke-width="4" fill="none" opacity="0.8" stroke-dasharray="251.2" stroke-dashoffset="251.2">
+              <animate attributeName="stroke-dashoffset" values="251.2;0" dur="2s" repeatCount="indefinite"/>
+            </svg>
+        </div>
+        <h1 style="margin: 0 0 10px 0; font-size: 24px; font-weight: 300;">Threads Ops</h1>
+        <p style="margin: 0; opacity: 0.8;">Loading warehouse management system...</p>
+        <div class="loading-spinner" style="margin-top: 20px;"></div>
+      </div>
+    </div>
+    
+    <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Electron preload script -->
+    <script>
+      // Wait for Electron to be ready
+      if (window.electronAPI) {
+        console.log('Electron API available');
+      } else {
+        console.log('Running in browser mode');
+      }
+      
+      // Handle kiosk mode
+      if (window.electronAPI) {
+        window.electronAPI.on('app:kiosk-mode', (enabled) => {
+          if (enabled) {
+            document.body.classList.add('kiosk-mode');
+          } else {
+            document.body.classList.remove('kiosk-mode');
+          }
+        });
+      }
+      
+      // Prevent context menu in kiosk mode
+      document.addEventListener('contextmenu', (e) => {
+        if (document.body.classList.contains('kiosk-mode')) {
+          e.preventDefault();
+        }
+      });
+      
+      // Handle keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        // Prevent default behavior for function keys and other system keys
+        if (e.key === 'F11' || e.key === 'F12') {
+          e.preventDefault();
+        }
+        
+        // Handle scanner hotkeys
+        if (window.electronAPI && e.target === document.body) {
+          const key = e.key.toUpperCase();
+          if (['N', 'D', 'I', 'S', 'P', '1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(key)) {
+            window.electronAPI.scanner.simulateHotkey(key);
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
