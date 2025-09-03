@@ -12,27 +12,38 @@
     "dev:electron": "tsc -p electron/tsconfig.json && electron .",
     "dev:renderer": "vite",
     "dev:cloud": "node cloud/server.js",
-    "dev:full": "run-p dev:cloud dev:renderer",
+    "dev:full": "npm-run-all -p dev:cloud dev:renderer",
     "build": "npm run build:electron && npm run build:renderer && npm run build:cloud",
     "build:electron": "tsc -p electron/tsconfig.json",
     "build:renderer": "vite build",
     "build:cloud": "tsc -p cloud/tsconfig.json",
-    "test": "jest",
-    "test:watch": "jest --watch",
+    "preview": "vite preview",
+    "clean": "rimraf dist .turbo .cache .vite",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "package:win": "electron-builder --win",
-    "package:mac": "electron-builder --mac",
-    "package:linux": "electron-builder --linux",
+    "package": "node scripts/package.js",
+    "package:win": "node scripts/package.js win",
+    "package:mac": "node scripts/package.js mac",
+    "package:linux": "node scripts/package.js linux",
     "simulate:throttle": "node scripts/simulate-throttle.js",
     "simulate:printerdown": "node scripts/simulate-printerdown.js",
-    "selfcheck": "bash ./scripts/self-check.sh",
+    "selfcheck": "node scripts/self-check.js",
     "test:hardware": "node scripts/test-hardware.js",
     "postinstall": "electron-builder install-app-deps",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
+    "format": "prettier --write .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "check": "npm-run-all -s lint typecheck",
-    "prestart": "npm run check"
+    "check": "npm-run-all -s lint typecheck test",
+    "prestart": "npm run check",
+    "deps:audit": "npm audit --omit=dev || true",
+    "deps:outdated": "npm outdated || true",
+    "deps:update": "npx npm-check-updates -u",
+    "db:diff": "supabase db diff -f auto",
+    "db:push": "supabase db push",
+    "db:query": "supabase db query < db/seed.sql",
+    "gen:types": "supabase gen types typescript --project-id sanxmfdxsdivvarjvdwq --schema public > src/lib/database.types.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.0",
@@ -71,14 +82,23 @@
     "cross-env": "^7.0.3",
     "electron": "^27.3.11",
     "electron-builder": "^24.6.0",
+    "electron-updater": "^6.1.7",
     "eslint": "^9.34.0",
     "eslint-plugin-react": "^7.37.5",
+    "husky": "^9.0.0",
     "jest": "^29.7.0",
+    "lint-staged": "^15.0.0",
+    "npm-check-updates": "^16.0.0",
     "npm-run-all": "^4.1.5",
     "playwright": "^1.40.0",
+    "prettier": "^3.0.0",
+    "rimraf": "^5.0.0",
+    "supabase": "^1.0.0",
     "ts-jest": "^29.1.0",
     "typescript": "^5.9.2",
-    "vite": "^4.5.14"
+    "vite": "^4.5.14",
+    "vitest": "^1.0.0",
+    "@vitest/ui": "^1.0.0"
   },
   "build": {
     "appId": "com.threadsalliance.ops",
@@ -113,5 +133,11 @@
       "provider": "github",
       "releaseType": "release"
     }
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,json,css,md}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   }
 }

@@ -16,7 +16,7 @@ Threads Ops is a powerful desktop application for warehouse management, built wi
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 20+ (see `.nvmrc`)
 - npm or yarn
 - Supabase account and project
 
@@ -27,26 +27,39 @@ Threads Ops is a powerful desktop application for warehouse management, built wi
 3. Install dependencies: `npm install`
 4. Start development: `npm run dev:renderer`
 
-## Dev Commands
+## Quick Commands
 
 ```bash
-# Start renderer (frontend)
-npm run dev:renderer
+# Development
+npm run dev:renderer    # Start frontend only
+npm run dev:cloud       # Start cloud server only  
+npm run dev:full        # Start both (full stack)
+npm run dev             # Start Electron + renderer
 
-# Start cloud server
-npm run dev:cloud
+# Quality & Testing
+npm run check           # Run lint + typecheck + tests
+npm run lint            # ESLint check
+npm run lint:fix        # ESLint auto-fix
+npm run format          # Prettier format all files
+npm run typecheck       # TypeScript check
+npm run test            # Run tests
+npm run test:watch      # Watch mode tests
 
-# Start both (full stack)
-npm run dev:full
+# Build & Package
+npm run build           # Build all (electron + renderer + cloud)
+npm run clean           # Clean build artifacts
+npm run preview         # Preview built renderer
 
-# Run self-check
-npm run selfcheck
+# Database & Types
+npm run gen:types       # Generate Supabase types
+npm run db:push         # Push schema changes
+npm run db:diff         # Show schema differences
 
-# Lint and type check
-npm run check
-
-# Build for production
-npm run build
+# Dependencies & Maintenance
+npm run deps:audit      # Security audit
+npm run deps:outdated   # Check outdated packages
+npm run deps:update     # Update dependencies
+npm run selfcheck       # Comprehensive health check
 ```
 
 ## Environment Variables
