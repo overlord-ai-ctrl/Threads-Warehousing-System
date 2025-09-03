@@ -26,6 +26,7 @@
     "simulate:throttle": "node scripts/simulate-throttle.js",
     "simulate:printerdown": "node scripts/simulate-printerdown.js",
     "selfcheck": "bash ./scripts/self-check.sh",
+    "test:hardware": "node scripts/test-hardware.js",
     "postinstall": "electron-builder install-app-deps",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",

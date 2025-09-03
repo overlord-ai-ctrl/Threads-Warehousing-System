@@ -1,0 +1,235 @@
+---
+alwaysApply: true
+
+⸻
+
+Cursor Ruleset — Threads Alliance Ops (Desktop Edition)
+
+0) Platform assumptions
+	•	Runtime: Electron or Tauri
+	•	OS targets: Windows 10/11 + macOS 13+
+	•	Printers: Thermal (ZPL/PDF) via native drivers
+	•	Scanners: USB/Bluetooth HID (keyboard-wedge)
+
+⸻
+
+1) Install, updates, rollback
+	•	Code signing: Windows (EV cert), macOS (notarized). Block unsigned.
+	•	Updater: Delta updates with automatic rollback on launch crash loop (>3).
+	•	Versioned migrations: App DB schema migrations are idempotent and backward compatible one minor version.
+	•	Air-gapped mode: Allow running on the last working version if updates can’t fetch.
+
+2) Local data, encryption, PII
+	•	Local DB: SQLite (WAL mode). Encrypt at rest (sqlcipher/OS keychain for key).
+	•	Key storage: OAuth tokens + API keys in OS keychain (Keychain/DPAPI).
+	•	PII minimization: Store only what’s needed for the active queue; purge fulfilled/abandoned records after X days (configurable).
+	•	Redaction: Logs mask name, full address (keep postcode + last line), phone, email.
+
+3) Auth & multi-tenant profiles
+	•	Sign-in: Device code flow or embedded OAuth; offline cache of session until expiry.
+	•	Profiles: Multiple brand/shop profiles selectable at launch; isolated local DB namespaces per profile.
+	•	Lock screen: Auto-lock after N mins idle; re-auth required for admin actions.
+
+4) Offline-first queues
+	•	Job outbox: fulfillments, labels, events, inventory_adjust persisted locally.
+	•	Retry policy: 1m, 5m, 15m, 30m backoff; exponential jitter; idempotency keys.
+	•	Conflict handling: If job is older than remote state (e.g., already fulfilled), mark stale and archive with reason.
+
+5) Printing pipeline
+	•	Renderers: Prefer ZPL to thermal; PDF fallback. Test both at install.
+	•	Spooler: Local print queue with at-least-once delivery + no duplicates (hash of payload + idempotency key).
+	•	Printer health: Heartbeat every 30s. If offline → Queue & Banner, allow re-route to backup printer.
+	•	Label cache: Keep last 100 labels for instant reprint; void requires online.
+
+6) Scanner & kiosk UX
+	•	Kiosk mode: Fullscreen, hide system chrome; optional Windows shell replacement on packing PCs.
+	•	HID input: Debounce, swallow stray Enter/Tab; dedicated invisible input with 200–500ms scan window.
+	•	Hotkeys (bump bar): N=Next, D=Done, I=Issue, S=Skip, P=Reprint, 1–9 line ticks.
+	•	Power resilience: Reopen last screen & order after crash/reboot.
+
+7) Network & security
+	•	TLS & pinning: Pin CA or API cert fingerprints for critical endpoints (Shopify/Cloud).
+	•	HMAC verify: For any incoming callbacks (if used locally), otherwise all webhook work stays cloud-side.
+	•	Clock drift: Warn if system clock ±2 min; token flows depend on correct time.
+	•	Proxy: Respect OS proxy; expose manual override.
+
+8) Cloud sync contract
+	•	Minimal surface: Desktop never stores master secrets; it receives scoped per-brand tokens from your cloud.
+	•	State reconcilers: On app start, pull authoritative order list + compare with local queue; resolve diffs.
+	•	Telemetry (opt-in): Error + perf metrics only; no PII. Toggle in Settings.
+
+9) Error handling (desktop UX)
+	•	User errors: Human remedy + link (e.g., “Address invalid → Open Exceptions”).
+	•	Upstream errors: Auto-retry; show queued status; do not block next order.
+	•	System errors: Offer Create Support Bundle (logs + anonymized state zip).
+
+10) Logging & support
+	•	Structured logs: JSON lines with level, event, profile, correlation_id.
+	•	Log rotation: 10MB per file, keep last 10.
+	•	Support bundle: Redacted DB snapshot + logs; one-click export.
+
+11) Permissions & roles (local)
+	•	Operator / Lead / Admin: Admin can change printers, updates, profiles; Lead can resolve Exceptions; Operator can pick/print.
+	•	Escalation: Admin PIN required for overrides (negative inventory, forced print).
+
+12) Health & watchdog
+	•	Self-check panel: Printer status, label service reachability, Shopify token health, clock, disk space.
+	•	Watchdog: If UI unresponsive > 10s, auto-restart renderer; if 3 restarts in 5 min → rollback app version.
+
+13) Desktop acceptance tests
+	•	Cold start: Launch to Bench in <5s on clean install.
+	•	Power loss: Kill app mid-print → on relaunch, no duplicate label; job marked as uncertain, offer Reprint.
+	•	Offline pick: Complete 10 orders offline → when online, labels spool in order; no dup fulfillments.
+	•	Printer swap: Primary down → reroute to backup; banner shown; audit recorded.
+	•	Version migrate: Upgrade + rollback without data loss; migrations idempotent.
+	•	Sleep/wake: Survive OS sleep; reconnect queues; preserve current order.
+
+14) Simulations to pass before release
+	•	Carrier 429 storm: 50% label calls throttled; queue drains post-backoff; zero dups.
+	•	Network flap: 1s up / 5s down cycles for 2 min; UI remains usable; jobs persist.
+	•	Disk full: When <200MB free, warn; stop caching PDFs, still allow picking.
+	•	Scanner noise: Random keystrokes amid scans; no ghost actions.
+
+15) Desktop settings (per profile)
+	•	Brand skin (logo/colors), default location, service rules, SLA, printers (label/docs), offline retention days, telemetry toggle, auto-update policy (auto / prompt).
+
+16) Compliance & privacy
+	•	GDPR mode: Mask PII on-screen for training; prevent screenshots if enabled.
+	•	Data retention: Local purge policy; support “Erase local data” for a brand on offboarding.
+	•	Licensing: Device ID + signed license token (optional) to control seat count.
+
+⸻
+
+Cursor Self-Check Commands (Desktop)
+	•	“Audit desktop persistence & encryption. Confirm tokens in OS keychain, DB encrypted, logs redacted.”
+	•	“Simulate printer offline + network offline during fulfillment. Verify queues, banners, no duplicate side effects.”
+	•	“Run upgrade → forced crash loop → rollback. Prove no data loss and migrations idempotent.”
+	•	“Scan flood test (100 scans/min). Ensure no UI freeze and correct order locking.”
+	•	“Verify kiosk mode + hotkeys across Windows/macOS. List OS-specific quirks and fixes.”
+
+⸻
+
+Quick Desk Setup Checklist
+	•	Signed installer (MSI/DMG), auto-update enabled.
+	•	Printers added + test ZPL/PDF print passes.
+	•	Scanner in keyboard-wedge mode confirmed.
+	•	Profile connected (brand/shop), health all green.
+	•	Support bundle test export works.
+
+This slots on top of your earlier SaaS rules—now it’s warehouse-proof, offline-safe, and update-friendly for a downloadable Threads Alliance app.Awesome—here’s a tightened Cursor Ruleset (Desktop Edition) for a downloadable warehouse app (Electron/Tauri-style) that still talks to Shopify + your cloud, but runs locally at packing benches.
+
+⸻
+
+Cursor Ruleset — Threads Alliance Ops (Desktop Edition)
+
+0) Platform assumptions
+	•	Runtime: Electron or Tauri
+	•	OS targets: Windows 10/11 + macOS 13+
+	•	Printers: Thermal (ZPL/PDF) via native drivers
+	•	Scanners: USB/Bluetooth HID (keyboard-wedge)
+
+⸻
+
+1) Install, updates, rollback
+	•	Code signing: Windows (EV cert), macOS (notarized). Block unsigned.
+	•	Updater: Delta updates with automatic rollback on launch crash loop (>3).
+	•	Versioned migrations: App DB schema migrations are idempotent and backward compatible one minor version.
+	•	Air-gapped mode: Allow running on the last working version if updates can’t fetch.
+
+2) Local data, encryption, PII
+	•	Local DB: SQLite (WAL mode). Encrypt at rest (sqlcipher/OS keychain for key).
+	•	Key storage: OAuth tokens + API keys in OS keychain (Keychain/DPAPI).
+	•	PII minimization: Store only what’s needed for the active queue; purge fulfilled/abandoned records after X days (configurable).
+	•	Redaction: Logs mask name, full address (keep postcode + last line), phone, email.
+
+3) Auth & multi-tenant profiles
+	•	Sign-in: Device code flow or embedded OAuth; offline cache of session until expiry.
+	•	Profiles: Multiple brand/shop profiles selectable at launch; isolated local DB namespaces per profile.
+	•	Lock screen: Auto-lock after N mins idle; re-auth required for admin actions.
+
+4) Offline-first queues
+	•	Job outbox: fulfillments, labels, events, inventory_adjust persisted locally.
+	•	Retry policy: 1m, 5m, 15m, 30m backoff; exponential jitter; idempotency keys.
+	•	Conflict handling: If job is older than remote state (e.g., already fulfilled), mark stale and archive with reason.
+
+5) Printing pipeline
+	•	Renderers: Prefer ZPL to thermal; PDF fallback. Test both at install.
+	•	Spooler: Local print queue with at-least-once delivery + no duplicates (hash of payload + idempotency key).
+	•	Printer health: Heartbeat every 30s. If offline → Queue & Banner, allow re-route to backup printer.
+	•	Label cache: Keep last 100 labels for instant reprint; void requires online.
+
+6) Scanner & kiosk UX
+	•	Kiosk mode: Fullscreen, hide system chrome; optional Windows shell replacement on packing PCs.
+	•	HID input: Debounce, swallow stray Enter/Tab; dedicated invisible input with 200–500ms scan window.
+	•	Hotkeys (bump bar): N=Next, D=Done, I=Issue, S=Skip, P=Reprint, 1–9 line ticks.
+	•	Power resilience: Reopen last screen & order after crash/reboot.
+
+7) Network & security
+	•	TLS & pinning: Pin CA or API cert fingerprints for critical endpoints (Shopify/Cloud).
+	•	HMAC verify: For any incoming callbacks (if used locally), otherwise all webhook work stays cloud-side.
+	•	Clock drift: Warn if system clock ±2 min; token flows depend on correct time.
+	•	Proxy: Respect OS proxy; expose manual override.
+
+8) Cloud sync contract
+	•	Minimal surface: Desktop never stores master secrets; it receives scoped per-brand tokens from your cloud.
+	•	State reconcilers: On app start, pull authoritative order list + compare with local queue; resolve diffs.
+	•	Telemetry (opt-in): Error + perf metrics only; no PII. Toggle in Settings.
+
+9) Error handling (desktop UX)
+	•	User errors: Human remedy + link (e.g., “Address invalid → Open Exceptions”).
+	•	Upstream errors: Auto-retry; show queued status; do not block next order.
+	•	System errors: Offer Create Support Bundle (logs + anonymized state zip).
+
+10) Logging & support
+	•	Structured logs: JSON lines with level, event, profile, correlation_id.
+	•	Log rotation: 10MB per file, keep last 10.
+	•	Support bundle: Redacted DB snapshot + logs; one-click export.
+
+11) Permissions & roles (local)
+	•	Operator / Lead / Admin: Admin can change printers, updates, profiles; Lead can resolve Exceptions; Operator can pick/print.
+	•	Escalation: Admin PIN required for overrides (negative inventory, forced print).
+
+12) Health & watchdog
+	•	Self-check panel: Printer status, label service reachability, Shopify token health, clock, disk space.
+	•	Watchdog: If UI unresponsive > 10s, auto-restart renderer; if 3 restarts in 5 min → rollback app version.
+
+13) Desktop acceptance tests
+	•	Cold start: Launch to Bench in <5s on clean install.
+	•	Power loss: Kill app mid-print → on relaunch, no duplicate label; job marked as uncertain, offer Reprint.
+	•	Offline pick: Complete 10 orders offline → when online, labels spool in order; no dup fulfillments.
+	•	Printer swap: Primary down → reroute to backup; banner shown; audit recorded.
+	•	Version migrate: Upgrade + rollback without data loss; migrations idempotent.
+	•	Sleep/wake: Survive OS sleep; reconnect queues; preserve current order.
+
+14) Simulations to pass before release
+	•	Carrier 429 storm: 50% label calls throttled; queue drains post-backoff; zero dups.
+	•	Network flap: 1s up / 5s down cycles for 2 min; UI remains usable; jobs persist.
+	•	Disk full: When <200MB free, warn; stop caching PDFs, still allow picking.
+	•	Scanner noise: Random keystrokes amid scans; no ghost actions.
+
+15) Desktop settings (per profile)
+	•	Brand skin (logo/colors), default location, service rules, SLA, printers (label/docs), offline retention days, telemetry toggle, auto-update policy (auto / prompt).
+
+16) Compliance & privacy
+	•	GDPR mode: Mask PII on-screen for training; prevent screenshots if enabled.
+	•	Data retention: Local purge policy; support “Erase local data” for a brand on offboarding.
+	•	Licensing: Device ID + signed license token (optional) to control seat count.
+
+⸻
+
+Cursor Self-Check Commands (Desktop)
+	•	“Audit desktop persistence & encryption. Confirm tokens in OS keychain, DB encrypted, logs redacted.”
+	•	“Simulate printer offline + network offline during fulfillment. Verify queues, banners, no duplicate side effects.”
+	•	“Run upgrade → forced crash loop → rollback. Prove no data loss and migrations idempotent.”
+	•	“Scan flood test (100 scans/min). Ensure no UI freeze and correct order locking.”
+	•	“Verify kiosk mode + hotkeys across Windows/macOS. List OS-specific quirks and fixes.”
+
+⸻
+
+Quick Desk Setup Checklist
+	•	Signed installer (MSI/DMG), auto-update enabled.
+	•	Printers added + test ZPL/PDF print passes.
+	•	Scanner in keyboard-wedge mode confirmed.
+	•	Profile connected (brand/shop), health all green.
+	•	Support bundle test export works.
+

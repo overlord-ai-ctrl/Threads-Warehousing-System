@@ -37,6 +37,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     { name: 'Cycle Count', href: '/cycle-count', icon: '🔢' },
     { name: 'Exceptions', href: '/exceptions', icon: '⚠️' },
     { name: 'Settings', href: '/settings', icon: '⚙️' },
+    { name: 'Hardware Test', href: '/hardware-test', icon: '🔧' },
   ];
 
   const isActiveRoute = (href: string) => {

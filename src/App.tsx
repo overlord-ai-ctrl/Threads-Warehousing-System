@@ -12,6 +12,7 @@ import { ReturnsView } from './pages/ReturnsView';
 import { CycleCountView } from './pages/CycleCountView';
 import { ExceptionsView } from './pages/ExceptionsView';
 import { SettingsView } from './pages/SettingsView';
+import { HardwareTest } from './components/HardwareTest';
 import { LoadingScreen } from './components/LoadingScreen';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastContainer } from './components/ToastContainer';
@@ -76,6 +77,7 @@ export const App: React.FC = () => {
             <Route path="/brand/:brandId/cycle-count" element={<CycleCountView />} />
             <Route path="/exceptions" element={<ExceptionsView />} />
             <Route path="/settings" element={<SettingsView />} />
+            <Route path="/hardware-test" element={<HardwareTest />} />
             <Route path="*" element={<Navigate to="/master" replace />} />
           </Routes>
         </Layout>
